@@ -1,9 +1,11 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+import bcrypt, { hash } from "bcrypt"
 
 const app = express();
 const port = 3000;
+const saltRounds=10;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -31,9 +33,14 @@ app.get("/register", (req, res) => {
 app.post("/register", async (req, res) => {
   const email=req.body.username;
   const password=req.body.password;
-  try{
-
-    await db.query("insert into users (email,password) values ($1,$2)",[email,password]);
+  bcrypt.hash(password,saltRounds,async(err,hash)=>{
+    if(err){
+      console.log("Error hashing password: ",err);
+    }
+    else{
+      try{    
+    await db.query("insert into users (email,password) values ($1,$2)",[email,hash]);
+    console.log(hash);
     res.render("login.ejs");
   }
   catch(err){
@@ -43,6 +50,10 @@ app.post("/register", async (req, res) => {
    
   }
 
+    }
+  })
+
+  
 
 });
 
