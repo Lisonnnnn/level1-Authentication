@@ -25,7 +25,10 @@ db.connect();
 app.use(session({
   secret:"TOPSECRETWORD",
   resave:false,
-  saveUninitialized:true
+  saveUninitialized:true,
+  cookie:{
+    maxAge:1000*60*60*24,
+  }
 
 }));
 app.use(passport.initialize());
@@ -53,9 +56,13 @@ app.post("/register", async (req, res) => {
     }
     else{
       try{    
-    await db.query("insert into users (email,password) values ($1,$2)",[email,hash]);
+    const result=await db.query("insert into users (email,password) values ($1,$2) RETURNING *" ,[email,hash]);
     console.log(hash);
-    res.render("login.ejs");
+    const user=result.rows[0];
+    req.login(user,(err)=>{
+      console.log(err);
+      res.redirect("/secrets")
+    });
   }
   catch(err){
 
