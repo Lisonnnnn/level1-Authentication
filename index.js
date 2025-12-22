@@ -2,6 +2,10 @@ import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
 import bcrypt, { hash } from "bcrypt"
+import session from "express-session";
+import passport from "passport";
+import { Strategy } from "passport-local";
+
 
 const app = express();
 const port = 3000;
@@ -18,6 +22,16 @@ const db=new pg.Client({
 
 })
 db.connect();
+app.use(session({
+  secret:"TOPSECRETWORD",
+  resave:false,
+  saveUninitialized:true
+
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 app.get("/", (req, res) => {
   res.render("home.ejs");
 });
@@ -88,6 +102,22 @@ app.post("/login", async (req, res) => {
     res.send("User not found");
   }
 });
+
+
+app.get("/secrets",(req,res)=>{
+  if(req.isAuthenticated())
+  {
+    res.render("secrets.ejs");
+  }
+  else{
+    res.redirect("/login");
+  }
+  
+})
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
