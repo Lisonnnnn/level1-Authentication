@@ -71,37 +71,10 @@ app.post("/register", async (req, res) => {
 
 });
 
-app.post("/login", async (req, res) => {
-  const email=req.body.username;
-  const loginpassword=req.body.password;
-  const result=await db.query("select * from users where email=$1",[email]);
-  if(result.rows.length>0){
-   const user=result.rows[0];
-   const storedHashedPassword=result.rows[0].password;
-
-   bcrypt.compare(loginpassword,storedHashedPassword,(err,result)=>{
-    if(err){
-      console.log("Error comparing passwords: ",err);
-    }
-    else{
-      if(result){
-          res.render("secrets.ejs");
-      }
-      else{
-        res.send("Incorrect Password");
-      }
-      
-    }
-  })
-   
-  
-
-
-  }
-  else{
-    res.send("User not found");
-  }
-});
+app.post("/login",passport.authenticate("local",{
+  successRedirect:"/secrets",
+  failureRedirect:"/login",
+}));
 
 
 app.get("/secrets",(req,res)=>{
@@ -117,7 +90,45 @@ app.get("/secrets",(req,res)=>{
 
 
 
+passport.use(new Strategy (async function verify(username,password,cb) {
 
+  const user=await db.query("select * from users where email=$1",[username]);
+  if(user.rows.length>0){
+   
+   const storedHashedPassword=user.rows[0].password;
+
+   bcrypt.compare(password,storedHashedPassword,(err,result)=>{
+    if(err){
+      console.log("Error comparing passwords: ",err);
+    }
+    else{
+      if(result){
+          cb(null,user);
+      }
+      else{
+        cb(null,false);
+      }
+      
+    }
+  })
+   
+  
+
+
+  }
+  else{
+    return cb("user not found");
+  }
+
+}))
+
+passport.serializeUser((user,cb)=>{
+  cb(null,user);
+})
+
+passport.deserializeUser((user,cb)=>{
+  cb(null,user);
+})
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
