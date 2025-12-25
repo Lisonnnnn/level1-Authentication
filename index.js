@@ -102,6 +102,12 @@ app.get("/auth/google/secrets",passport.authenticate("google",{
   failureRedirect:"/login",
 }))
 
+app.get("/logout",(req,res)=>{
+  req.logout((err)=>{
+    if(err) console.log(err);
+    res.redirect("/");
+  })
+})
 
 
 app.post("/login",passport.authenticate("local",{
