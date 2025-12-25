@@ -82,15 +82,6 @@ app.post("/register", async (req, res) => {
 
 });
 
-
-
-
-app.post("/login",passport.authenticate("local",{
-  successRedirect:"/secrets",
-  failureRedirect:"/login",
-}));
-
-
 app.get("/secrets",(req,res)=>{
   if(req.isAuthenticated())
   {
@@ -101,6 +92,25 @@ app.get("/secrets",(req,res)=>{
   }
   
 })
+
+app.get("/auth/google",passport.authenticate("google",{
+scope:["profile","email"],
+}));
+
+app.get("/auth/google/secrets",passport.authenticate("google",{
+  successRedirect:"/secrets",
+  failureRedirect:"/login",
+}))
+
+
+
+app.post("/login",passport.authenticate("local",{
+  successRedirect:"/secrets",
+  failureRedirect:"/login",
+}));
+
+
+
 
 
 
@@ -144,6 +154,13 @@ userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo",
 
 },async(accesToken,refreshToken,profile,cb)=>{
   console.log(profile);
+  try{
+    await db.query("select * from users where email=$1",[profile.email])
+
+  }catch{
+
+  }
+
 }))
 
 
