@@ -155,9 +155,18 @@ userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo",
 },async(accesToken,refreshToken,profile,cb)=>{
   console.log(profile);
   try{
-    await db.query("select * from users where email=$1",[profile.email])
+    const result=await db.query("select * from users where email=$1",[profile.email]);
+    if(result.rows.length==0){
+      const newUser=await db.query("insert into users (email,password) values ($1,$2)",[profile.email,"google"])
+     return cb(null,newUser.rows[0]);
+    }
+    else {
+     return cb(null,result.rows[0]);
+    }
+    
 
-  }catch{
+  }catch (err){
+    return cb(err);
 
   }
 
