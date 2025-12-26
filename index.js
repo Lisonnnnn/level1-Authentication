@@ -82,10 +82,26 @@ app.post("/register", async (req, res) => {
 
 });
 
-app.get("/secrets",(req,res)=>{
+app.get("/secrets",async(req,res)=>{
   if(req.isAuthenticated())
   {
-    res.render("secrets.ejs");
+    try{
+
+        const userEmail=req.user.email??req.user.rows[0].email;;
+        const result=await db.query("select secret from users where email=$1",[userEmail]);
+        const secret=result.rows[0].secret;
+        if(secret){
+          res.render("secrets.ejs",{secret:secret});
+        }
+        else {
+          res.render("secrets.ejs",{secret:"No secret has been published yet"});
+        }
+        
+    }
+    catch(err){
+      console.log(err);
+
+    }
   }
   else{
     res.redirect("/login");
@@ -122,9 +138,15 @@ app.get("/submit",(req,res)=>{
 app.post("/submit",async(req,res)=>{
   const submittedSecret=req.body.secret;
   const userEmail=req.user.email??req.user.rows[0].email;
-  console.log(userEmail);
-  //console.log(req.user.email);
-  console.log(submittedSecret);
+  try{
+    await db.query("update users set secret=$1 where email=$2",[submittedSecret,userEmail]);
+
+    res.redirect("/secrets");
+  }
+  catch(err){
+    console.log(err);
+  }
+
 
 })
 
