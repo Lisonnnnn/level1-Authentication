@@ -109,11 +109,25 @@ app.get("/logout",(req,res)=>{
   })
 })
 
+//get submit form
 app.get("/submit",(req,res)=>{
   if(req.isAuthenticated()){
     res.render("submit.ejs");
   }
+  else {
+    res.redirect("/login");
+  }
 })
+//post secret
+app.post("/submit",async(req,res)=>{
+  const submittedSecret=req.body.secret;
+  const userEmail=req.user.email??req.user.rows[0].email;
+  console.log(userEmail);
+  //console.log(req.user.email);
+  console.log(submittedSecret);
+
+})
+
 
 app.post("/login",passport.authenticate("local",{
   successRedirect:"/secrets",
@@ -168,7 +182,7 @@ userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo",
   try{
     const result=await db.query("select * from users where email=$1",[profile.email]);
     if(result.rows.length==0){
-      const newUser=await db.query("insert into users (email,password) values ($1,$2)",[profile.email,"google"])
+      const newUser=await db.query("insert into users (email,password) values ($1,$2) RETURNING *",[profile.email,"google"])
      return cb(null,newUser.rows[0]);
     }
     else {
