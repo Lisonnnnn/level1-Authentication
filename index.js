@@ -109,6 +109,11 @@ app.get("/logout",(req,res)=>{
   })
 })
 
+app.get("/submit",(req,res)=>{
+  if(req.isAuthenticated()){
+    res.render("submit.ejs");
+  }
+})
 
 app.post("/login",passport.authenticate("local",{
   successRedirect:"/secrets",
